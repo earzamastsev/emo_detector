@@ -6,3 +6,5 @@ https://download.pytorch.org/whl/cpu/torch-1.7.1%2Bcpu-cp36-cp36m-linux_x86_64.w
 plotly==4.14.3
 Flask==1.1.2
 Pillow==8.1.2
+gunicorn==20.0.4
+
