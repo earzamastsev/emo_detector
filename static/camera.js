@@ -35,7 +35,8 @@ let stop = function () {
         track.stop();
     }
     video.srcObject = null;
-    clearInterval(intervalID);
+    clearInterval(intervalID1);
+    clearInterval(intervalID2);
 }
 
 let start = function () {
@@ -50,7 +51,9 @@ let start = function () {
     }
     const elem = document.querySelector(".btn-toast-show");
     elem.classList.remove('disabled');
-    intervalID = setInterval(() => {detect()}, 500);
+    intervalID1 = setInterval(() => {detect()}, 500);
+    intervalID2 = setInterval(() => {loadFromBuffer()}, 500);
+
 }
 
 function setEventListeners() {
@@ -138,8 +141,8 @@ function showSnapshot(imgElem) {
     }
 }
 
-
 let loadFromBuffer = function () {
+        if (buffer.length > 10) {
         let canvas = document.querySelector('canvas#picture');
         let bufferCtx  = canvas.getContext('2d');
         let current = buffer.shift();
@@ -154,6 +157,9 @@ let loadFromBuffer = function () {
             bufferCtx.fillText(current.result.emo, current.result.x, current.result.y-2);
             }
         image.src = URL.createObjectURL(current.blob);
+        }
+        else {
+        console.log('Buffer is empty (<10)...')}
 };
 
 async function detect() {
@@ -175,7 +181,7 @@ async function detect() {
             } else {
                 seq += 1;
                 buffer.push({"blob":blob, "seq":seq, "result":result});
-                loadFromBuffer();
+                console.log(result.timer)
                 }
         })
     }, "image/jpeg", 0.90);

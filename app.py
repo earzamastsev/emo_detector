@@ -10,6 +10,16 @@ from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import time
+
+class Timer:
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, *args):
+        self.end = time.time()
+        self.interval = self.end - self.start
 
 model = torch.load('models/resnet34_ft_albu_imb_4.pth', map_location=torch.device('cpu'))
 model = model.module
@@ -168,16 +178,18 @@ def detect():
     data = request.files["file"]
     seq = request.form['seq']
     img = Image.open(data)
-    bbox = mtcnn.detect(img)[0]
-    if bbox is None:
-        return jsonify({"status": "error"})
-    bbox = bbox[0].astype(np.uint8).tolist()
-    face = extract_face(img, bbox, image_size=224)
-    emo = predict(face)
+    with Timer() as t:
+        bbox = mtcnn.detect(img)[0]
+        if bbox is None:
+            return jsonify({"status": "error"})
+        bbox = bbox[0].astype(np.uint8).tolist()
+        face = extract_face(img, bbox, image_size=224)
+        emo = predict(face)
     results["emotion"].append(emo)
     results["timestamp"].append(datetime.timestamp(datetime.now()))
-    session['results'] = results
+    session["results"] = results
     return jsonify({"status": "ok",
+                    "timer": f"{t.interval:.3f}",
                     "seq": seq,
                     "emo": emo,
                     "x": bbox[0],
@@ -187,4 +199,4 @@ def detect():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True, port="8080")
