@@ -2,7 +2,7 @@ pandas==1.1.5
 facenet_pytorch==2.5.2
 numpy==1.19.5
 torchvision==0.8.2
-http://download.pytorch.org/whl/cpu/torch-1.7.1-cp36-cp36m-linux_x86_64.whl
+https://download.pytorch.org/whl/cpu/torch-1.7.1%2Bcpu-cp36-cp36m-linux_x86_64.whl
 plotly==4.14.3
 Flask==1.1.2
 Pillow==8.1.2
