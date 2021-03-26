@@ -50,7 +50,7 @@ let start = function () {
     }
     const elem = document.querySelector(".btn-toast-show");
     elem.classList.remove('disabled');
-    intervalID = setInterval(() => {detect()}, 300);
+    intervalID = setInterval(() => {detect()}, 500);
 }
 
 function setEventListeners() {
@@ -175,7 +175,6 @@ async function detect() {
             } else {
                 seq += 1;
                 buffer.push({"blob":blob, "seq":seq, "result":result});
-
                 loadFromBuffer();
                 }
         })
