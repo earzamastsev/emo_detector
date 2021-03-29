@@ -57,7 +57,6 @@ let start = function () {
 }
 
 function setEventListeners() {
-
     const startStopElem = document.querySelector(".start");
     startStopElem.addEventListener("click", (e) => {
     if (e.target.classList.contains('start')) {
@@ -120,14 +119,6 @@ function setEventListeners() {
                 $('.show-graph').html(result);
             });
     } );
-}
-
-function plotGraph(e) {
-    console.log('Pressed');
-    e.preventDefault();
-    fetch(getPlotElem.href)
-        .then(response)
-        .then(result => { console.log(result) })
 }
 
 function getSnapshot(videoElem) {
