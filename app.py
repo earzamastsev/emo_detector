@@ -23,7 +23,7 @@ class Timer:
 
 model = torch.load('models/resnet34_ft_albu_imb_4.pth', map_location=torch.device('cpu'))
 model = model.module
-mtcnn = MTCNN()
+mtcnn = MTCNN(select_largest=True, margin=10, post_process=False, device='cpu')
 results = {"timestamp": [],
            "emotion": []
           }
@@ -175,14 +175,14 @@ def plot():
 
 @app.route('/detect/', methods=['POST'])
 def detect():
-    data = request.files["file"]
+    data = request.files['file']
     seq = request.form['seq']
     img = Image.open(data)
     with Timer() as t:
         bbox = mtcnn.detect(img)[0]
         if bbox is None:
             return jsonify({"status": "error"})
-        bbox = bbox[0].astype(np.uint8).tolist()
+        bbox = bbox[0].astype(np.int).tolist()
         face = extract_face(img, bbox, image_size=224)
         emo = predict(face)
     results["emotion"].append(emo)

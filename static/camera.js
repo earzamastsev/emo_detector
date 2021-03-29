@@ -51,8 +51,8 @@ let start = function () {
     }
     const elem = document.querySelector(".btn-toast-show");
     elem.classList.remove('disabled');
-    intervalID1 = setInterval(() => {detect()}, 500);
-    intervalID2 = setInterval(() => {loadFromBuffer()}, 500);
+    intervalID1 = setInterval(() => {detect()}, 300);
+    intervalID2 = setInterval(() => {loadFromBuffer()}, 300);
 
 }
 
@@ -85,12 +85,15 @@ function setEventListeners() {
          iframeElem.removeAttribute("width");
          iframeElem.removeAttribute("height");
          tmp.insertAdjacentElement("afterBegin", iframeElem);
+         const emoBtnElem = document.querySelector(".btn-toast-show");
+         document.querySelector(".fullscreen .card-body .text-center").insertAdjacentElement('beforeEnd', emoBtnElem)
          });
 
 
     const closeFullscreenElem = document.querySelector(".close-fullscreen");
     closeFullscreenElem.addEventListener("click", (e) => {
          let fullscreenCard = document.querySelector(".fullscreen");
+         const emoBtnElem = document.querySelector(".btn-toast-show");
          let base = document.querySelector(".base");
          fullscreenCard.style.visibility='hidden'
          base.style.visibility='visible';
@@ -98,7 +101,8 @@ function setEventListeners() {
          iframeElem.classList.remove('iframe-fullscreen');
          iframeElem.setAttribute("width", 400);
          iframeElem.setAttribute("height", 315);
-         tmp.insertAdjacentElement("afterBegin", iframeElem)
+         tmp.insertAdjacentElement("afterBegin", iframeElem);
+         document.querySelector(".base .webcam").insertAdjacentElement('beforeEnd', emoBtnElem)
           });
 
     const getPlotElem = document.querySelector(".get-graph");
@@ -142,7 +146,7 @@ function showSnapshot(imgElem) {
 }
 
 let loadFromBuffer = function () {
-        if (buffer.length > 10) {
+        if (buffer.length > 2) {
         let canvas = document.querySelector('canvas#picture');
         let bufferCtx  = canvas.getContext('2d');
         let current = buffer.shift();
