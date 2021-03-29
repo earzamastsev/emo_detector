@@ -5,12 +5,13 @@ from flask import render_template, request, jsonify, session
 from torchvision import transforms as T
 import numpy as np
 from facenet_pytorch import MTCNN, extract_face
-
+from uuid import uuid1
 from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import time
+from flask_sqlalchemy import SQLAlchemy
 
 class Timer:
     def __enter__(self):
@@ -24,18 +25,27 @@ class Timer:
 model = torch.load('models/resnet34_ft_albu_imb_4.pth', map_location=torch.device('cpu'))
 model = model.module
 mtcnn = MTCNN(select_largest=True, margin=10, post_process=False, device='cpu')
-results = {"timestamp": [],
-           "emotion": []
-          }
 
 img = None
 app = Flask(__name__)
 app.secret_key = 'my_secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/database.sqlite3'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+class Users(db.Model):
+    __tablename__ = 'active-users'
+    __table_args__ = { 'extend_existing': True }
+    id = db.Column(db.Integer, primary_key=True)
+    userid = db.Column(db.String(80), unique=False, nullable=False)
+    emo = db.Column(db.String(25), unique=False, nullable=False)
+    timestamp = db.Column(db.String(25), unique=False, nullable=False)
 
 
 def prepare_data(data, period='10s'):
     df = pd.DataFrame(data)
-    df["datetime"] = pd.to_datetime(df.timestamp, unit='s')
+    df["datetime"] = pd.to_datetime(df.timestamp)
     df = df.set_index('datetime')
     df = df.groupby([pd.Grouper(freq=period), 'emotion']).agg({'emotion': 'count'})
     df = df.loc[df.groupby(level=0)['emotion'].idxmax()]
@@ -134,39 +144,34 @@ def predict(img):
     return class_names[preds]
 
 
-@app.route('/test/')
-def test():
-    return render_template('test.html')
-
 @app.route('/')
 def index():
-    if 'id' in session:
+    if 'uuid' in session:
         first_time = False
     else:
-        session['id'] = 1
+        session['uuid'] = uuid1().hex
         first_time = True
     return render_template('index.html', first_time=first_time)
 
-
 @app.route('/check/', methods=["POST"])
 def check():
-    global results
     data = request.json
     if data['reset'] == "yes":
-        session.pop('id')
-        results = {"timestamp": [],
-           "emotion": []
-          }
-        return jsonify({"status": "reset"})
+        Users.query.filter_by(userid=session['uuid']).delete()
+        db.session.commit()
+        return jsonify({"status": "reset", 'uuid': session['uuid']})
     if data['reset'] == "no":
-        results = session["results"]
-        return jsonify({"status": "continue"})
-
+        return jsonify({"status": "continue", 'uuid': session['uuid']})
 
 @app.route('/plot/')
 def plot():
-    if results['emotion']:
-        fig = prepare_plot(results)
+    rows = Users.query.filter_by(userid=session['uuid']).all()
+    if rows:
+        res_dict = {'timestamp':[], 'emotion':[] }
+        for row in rows:
+            res_dict['timestamp'].append(row.timestamp)
+            res_dict['emotion'].append(row.emo)
+        fig = prepare_plot(res_dict)
         fig.write_html('templates/plot.html')
         return render_template('plot.html')
     else:
@@ -176,21 +181,19 @@ def plot():
 @app.route('/detect/', methods=['POST'])
 def detect():
     data = request.files['file']
-    seq = request.form['seq']
     img = Image.open(data)
     with Timer() as t:
         bbox = mtcnn.detect(img)[0]
         if bbox is None:
             return jsonify({"status": "error"})
-        bbox = bbox[0].astype(np.int).tolist()
+        bbox = bbox[0].astype(int).tolist()
         face = extract_face(img, bbox, image_size=224)
         emo = predict(face)
-    results["emotion"].append(emo)
-    results["timestamp"].append(datetime.timestamp(datetime.now()))
-    session["results"] = results
+    res = Users(userid=session['uuid'], emo=emo, timestamp=datetime.now())
+    db.session.add(res)
+    db.session.commit()
     return jsonify({"status": "ok",
                     "timer": f"{t.interval:.3f}",
-                    "seq": seq,
                     "emo": emo,
                     "x": bbox[0],
                     "y": bbox[1],
@@ -199,4 +202,5 @@ def detect():
 
 
 if __name__ == '__main__':
+    db.create_all()
     app.run(debug=True, port="8080")

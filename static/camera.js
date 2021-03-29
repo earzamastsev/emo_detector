@@ -163,7 +163,7 @@ let loadFromBuffer = function () {
         image.src = URL.createObjectURL(current.blob);
         }
         else {
-        console.log('Buffer is empty (<10)...')}
+        console.log('Buffer is empty (<2)...')}
 };
 
 async function detect() {
@@ -172,8 +172,6 @@ async function detect() {
     canvas.toBlob((blob) => {
         formData.append("file", blob);
         formData.append("seq", seq);
-        formData.append("start", 1);
-        seq += 1;
         fetch('/detect/', {
         "method": "POST",
         "body": formData
@@ -184,7 +182,7 @@ async function detect() {
                 console.log('No face detected');
             } else {
                 seq += 1;
-                buffer.push({"blob":blob, "seq":seq, "result":result});
+                buffer.push({"blob":blob, "result":result});
                 console.log(result.timer)
                 }
         })

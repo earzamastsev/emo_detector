@@ -158,6 +158,7 @@
                 .then(response => response.json())
                 .then(result => {console.log(result)});
                 });
+
         continueStatsElem.addEventListener("click", (e) => {
             console.log('Continue')
             fetch("/check/", {
