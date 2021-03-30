@@ -4,8 +4,10 @@ from torchvision import transforms as T
 
 class EmoDetector:
     def __init__(self, device="cpu"):
+        self.device = device
         self.model = torch.load('models/resnet34_ft_albu_imb_4.pth', map_location=torch.device(device))
         self.model = self.model.module
+        self.model.to(device)
         self.mtcnn = MTCNN(select_largest=True, margin=5, post_process=False, device=device)
         self.transform = T.Compose([
             T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -40,6 +42,7 @@ class EmoDetector:
         face_data = self._get_face(img)
         if face_data["status"] == "ok":
             face = self._image_preprocessing(face_data['face'])
+            face = face.to(self.device)
             _, preds = self.model(face.unsqueeze(0)).max(1)
             result["emotion"] = self.class_names[preds]
             result["bbox"] = face_data["bbox"]
