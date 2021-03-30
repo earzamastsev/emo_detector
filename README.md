@@ -10,7 +10,7 @@
 `git checkout master`
 
 
-* Next, you need to install python packages:
+* Next, you need to install python packages (recommend to use venv):
 
 `cd emo_detector`
 
