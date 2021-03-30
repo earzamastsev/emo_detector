@@ -5,6 +5,7 @@
 ## Quick start:
 
 * Clone code:
+
 `git clone https://github.com/earzamastsev/emo_detector`
 
 `git checkout master`
